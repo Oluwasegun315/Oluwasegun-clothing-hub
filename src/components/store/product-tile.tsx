@@ -5,7 +5,7 @@ import Link from "next/link";
 import { StoreImage } from "@/components/store/store-image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { LogIn, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Product } from "@/types/database";
@@ -17,7 +17,7 @@ type Props = {
   product: Product;
 };
 
-/** Simple clothing product card — always shows name, category, price. */
+/** Product card — bag button sends guests to sign in first. */
 export function ProductTile({ product }: Props) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -39,7 +39,7 @@ export function ProductTile({ product }: Props) {
         return;
       }
       if (result.needsCatalog) {
-        toast.message("One-time setup needed", { description: result.message });
+        toast.message("Store setup needed", { description: result.message });
         return;
       }
       toast.error(result.message);
@@ -68,13 +68,22 @@ export function ProductTile({ product }: Props) {
           {product.name}
         </Link>
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <p className="text-lg font-bold text-primary">
-            {formatPrice(product.price)}
-          </p>
-          <Button type="button" size="sm" className="h-8 rounded-md px-3" disabled={adding} onClick={addToCart}>
+          <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 rounded-md px-3"
+            disabled={adding}
+            onClick={addToCart}
+            title="Sign in required to add to cart"
+          >
             <ShoppingBag className="size-4" />
           </Button>
         </div>
+        <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <LogIn className="size-3" aria-hidden />
+          Sign in to add to bag
+        </p>
       </div>
     </article>
   );

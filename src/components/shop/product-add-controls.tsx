@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LogIn, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 import { addToCartApi } from "@/lib/cart/add-to-cart";
@@ -12,16 +14,18 @@ type Props = {
   isAuthed: boolean;
 };
 
-/** PDP primary actions: quantity + add to cart with optimistic feedback. */
+/** PDP actions — guests must sign in before adding to cart. */
 export function ProductAddControls({ productId, isAuthed }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
 
+  const loginHref = `/login?next=${encodeURIComponent(`/product/${productId}`)}`;
+
   const add = async () => {
     if (!isAuthed) {
-      toast.message("Sign in required", { description: "Log in to add items to your cart." });
-      router.push(`/login?next=/product/${productId}`);
+      toast.message("Sign in first", { description: "Create an account or log in to add items to your bag." });
+      router.push(loginHref);
       return;
     }
     setBusy(true);
@@ -33,11 +37,11 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
         return;
       }
       if (result.needsSignIn) {
-        router.push(`/login?next=/product/${productId}`);
+        router.push(loginHref);
         return;
       }
       if (result.needsCatalog) {
-        toast.message("One-time setup needed", { description: result.message });
+        toast.message("Store setup needed", { description: result.message });
         return;
       }
       toast.error(result.message);
@@ -47,6 +51,21 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
       setBusy(false);
     }
   };
+
+  if (!isAuthed) {
+    return (
+      <div className="rounded-2xl border border-orange-200 bg-orange-50/80 p-5">
+        <p className="text-sm font-semibold text-gray-900">Sign in to add to your bag</p>
+        <p className="mt-1 text-sm text-gray-600">Quick sign-in keeps your cart saved across devices.</p>
+        <Link href={loginHref} className="mt-4 inline-flex">
+          <Button type="button" className="w-full rounded-full px-8 glow-button sm:w-auto">
+            <LogIn className="mr-2 size-4" />
+            Sign in to shop
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -74,6 +93,7 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
         </Button>
       </div>
       <Button type="button" className="rounded-full px-10 glow-button" disabled={busy} onClick={add}>
+        <ShoppingBag className="mr-2 size-4" />
         {busy ? "Adding…" : "Add to cart"}
       </Button>
     </div>

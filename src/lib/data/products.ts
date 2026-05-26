@@ -5,6 +5,7 @@ import {
   type CatalogProductFilters,
 } from "@/lib/data/marketplace-catalog";
 import { getAllLocalProducts } from "@/lib/data/local-store-catalog";
+import { resolveProductId } from "@/lib/data/resolve-product-id";
 
 export type { CatalogProductFilters as ProductQueryFilters };
 
@@ -18,5 +19,6 @@ export async function getProducts(filters: CatalogProductFilters = {}): Promise<
 
 export async function getProductById(id: string): Promise<Product | null> {
   const all = await getProducts({ limit: 500 });
-  return all.find((p) => p.id === id) ?? null;
+  const resolved = resolveProductId(id);
+  return all.find((p) => p.id === resolved || p.id === id) ?? null;
 }

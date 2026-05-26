@@ -11,6 +11,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  try {
+    return await refreshSession(request);
+  } catch {
+    return NextResponse.next({ request });
+  }
+}
+
+async function refreshSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getProductById } from "@/lib/data/products";
-import { ensureStoreProductInDatabase } from "@/lib/supabase/ensure-store-product";
+import { ensureStoreProduct } from "@/lib/supabase/ensure-store-product";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +29,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Product not found." }, { status: 404 });
   }
 
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch {
+    return NextResponse.json({ error: "Auth unavailable." }, { status: 503 });
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -38,13 +44,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Sign in to use cart." }, { status: 401 });
   }
 
-  const synced = await ensureStoreProductInDatabase(product);
+  const synced = await ensureStoreProduct(product, supabase);
   if (!synced) {
     return NextResponse.json(
       {
         error: "catalog_sync",
         message:
-          "Cart needs your catalog in Supabase. Run supabase/seed_local_store.sql in the SQL editor, or add SUPABASE_SERVICE_ROLE_KEY on Vercel.",
+          "Run supabase/migrations/20260526_store_catalog_cart.sql and supabase/seed_local_store.sql in Supabase SQL Editor (one time).",
       },
       { status: 409 }
     );
@@ -54,7 +60,7 @@ export async function POST(request: Request) {
     .from("cart_items")
     .select("id, quantity")
     .eq("user_id", user.id)
-    .eq("product_id", productId)
+    .eq("product_id", product.id)
     .maybeSingle();
 
   if (existing) {
@@ -69,7 +75,7 @@ export async function POST(request: Request) {
   } else {
     const { error } = await supabase.from("cart_items").insert({
       user_id: user.id,
-      product_id: productId,
+      product_id: product.id,
       quantity,
     });
 

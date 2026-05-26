@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+
 import { getProductById } from "@/lib/data/products";
+import { resolveProductId } from "@/lib/data/resolve-product-id";
 import { getRelatedProducts } from "@/lib/data/local-store-catalog";
+import { getSessionUser } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProductAddControls } from "@/components/shop/product-add-controls";
@@ -12,22 +14,21 @@ import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { formatPrice } from "@/lib/format-price";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { id: string } };
 
 export default async function ProductPage({ params }: Props) {
+  const resolvedId = resolveProductId(params.id);
+  if (resolvedId !== params.id) {
+    redirect(`/product/${resolvedId}`);
+  }
+
   const product = await getProductById(params.id);
   if (!product) redirect("/shop");
 
   const related = getRelatedProducts(product, 5);
-
-  let user = null;
-  try {
-    const supabase = createClient();
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-  } catch {
-    // Supabase not configured — cart still works as browse-only
-  }
+  const user = await getSessionUser();
 
   const rating = product.rating ?? 4.8;
   const sizeList =
@@ -58,9 +59,7 @@ export default async function ProductPage({ params }: Props) {
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.35em] text-primary">Product</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">{product.name}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-4">
-            <p className="text-2xl font-bold text-primary">
-              {formatPrice(product.price)}
-            </p>
+            <p className="text-2xl font-bold text-primary">{formatPrice(product.price)}</p>
             <div className="flex items-center gap-1.5 rounded-full border border-border bg-orange-50 px-3 py-1.5 text-sm">
               <Star className="size-4 fill-primary text-primary" aria-hidden />
               <span className="font-medium tabular-nums">{rating.toFixed(1)}</span>
@@ -115,7 +114,10 @@ export default async function ProductPage({ params }: Props) {
             </div>
           ) : null}
 
-          <Link href={product.age_group === "kids" ? "/shop?age=kids" : "/shop?age=adult"} className={cn(buttonVariants({ variant: "ghost" }), "mt-8 px-0 text-muted-foreground")}>
+          <Link
+            href={product.age_group === "kids" ? "/shop?age=kids" : "/shop?age=adult"}
+            className={cn(buttonVariants({ variant: "ghost" }), "mt-8 px-0 text-muted-foreground")}
+          >
             ← Back to {product.age_group === "kids" ? "kids" : "men"}&apos;s shop
           </Link>
         </div>

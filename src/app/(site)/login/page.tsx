@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { startOAuthSignIn } from "@/lib/auth/oauth";
 import { getPublicSiteUrl } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,17 +32,31 @@ function LoginForm() {
     }
   }, [oauthError]);
 
+  const authNotReady = () => {
+    toast.error(
+      "Sign-in is not set up on this deployment. In Vercel → Settings → Environment Variables, add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and NEXT_PUBLIC_SITE_URL, then redeploy."
+    );
+  };
+
   const onOAuth = async (provider: "google" | "discord") => {
+    if (!hasSupabaseEnv()) {
+      authNotReady();
+      return;
+    }
     try {
       const result = await startOAuthSignIn(provider, redirectTo);
       if (!result.ok) toast.error(result.message);
-    } catch {
-      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not start sign-in.");
     }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasSupabaseEnv()) {
+      authNotReady();
+      return;
+    }
     setLoading(true);
     try {
       const supabase = createClient();
@@ -53,8 +68,8 @@ function LoginForm() {
       toast.success("Welcome back");
       router.push(next);
       router.refresh();
-    } catch {
-      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not sign in.");
     } finally {
       setLoading(false);
     }

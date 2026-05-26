@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { StoreImage } from "@/components/store/store-image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,13 +21,13 @@ type Props = {
 export function ProductTile({ product }: Props) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
 
   const addToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setAdding(true);
     try {
+      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -22,7 +22,6 @@ export function CartView({ initialLines }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [lines, setLines] = useState(initialLines);
-  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     setLines(initialLines);
@@ -43,6 +42,7 @@ export function CartView({ initialLines }: Props) {
     setLines((prev) =>
       prev.map((l) => (l.id === lineId ? { ...l, quantity: safe } : l))
     );
+    const supabase = createClient();
     const { error } = await supabase.from("cart_items").update({ quantity: safe }).eq("id", lineId);
     if (error) {
       toast.error(error.message);
@@ -55,6 +55,7 @@ export function CartView({ initialLines }: Props) {
 
   const removeLine = async (lineId: string) => {
     setLines((prev) => prev.filter((l) => l.id !== lineId));
+    const supabase = createClient();
     const { error } = await supabase.from("cart_items").delete().eq("id", lineId);
     if (error) {
       toast.error(error.message);

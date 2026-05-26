@@ -57,10 +57,9 @@ export function Navbar() {
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const supabase = useMemo(() => createClient(), []);
-
   useEffect(() => {
     let cancelled = false;
+    const supabase = createClient();
     (async () => {
       const {
         data: { user },
@@ -104,7 +103,7 @@ export function Navbar() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [router]);
 
   const initials = useMemo(() => {
     const base = displayName || userEmail || "OH";
@@ -123,6 +122,7 @@ export function Navbar() {
   };
 
   const onLogout = async () => {
+    const supabase = createClient();
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error(error.message);

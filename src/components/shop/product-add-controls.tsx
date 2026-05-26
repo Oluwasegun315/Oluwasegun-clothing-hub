@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -17,7 +17,6 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
 
   const add = async () => {
     if (!isAuthed) {
@@ -27,6 +26,7 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
     }
     setBusy(true);
     try {
+      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

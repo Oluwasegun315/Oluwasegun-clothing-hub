@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,7 +14,6 @@ import { Separator } from "@/components/ui/separator";
 
 function SignupForm() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,6 +23,7 @@ function SignupForm() {
   const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/profile")}`;
 
   const onOAuth = async (provider: "google" | "discord") => {
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo },
@@ -34,6 +34,7 @@ function SignupForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

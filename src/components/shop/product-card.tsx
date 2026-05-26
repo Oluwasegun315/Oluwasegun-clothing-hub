@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +29,6 @@ export function ProductCard({ product, index = 0, size = "default" }: ProductCar
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [hover, setHover] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
   const hoverUrl = product.image_hover_url ?? product.image_url;
   const rating = product.rating ?? 4.8;
 
@@ -38,6 +37,7 @@ export function ProductCard({ product, index = 0, size = "default" }: ProductCar
     e.stopPropagation();
     setAdding(true);
     try {
+      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

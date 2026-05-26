@@ -1,0 +1,82 @@
+import { NextResponse } from "next/server";
+
+import { getProductById } from "@/lib/data/products";
+import { ensureStoreProductInDatabase } from "@/lib/supabase/ensure-store-product";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST(request: Request) {
+  if (!hasSupabaseEnv()) {
+    return NextResponse.json({ error: "Store auth is not configured." }, { status: 503 });
+  }
+
+  let body: { productId?: string; quantity?: number };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const productId = body.productId?.trim();
+  const quantity = Math.max(1, Math.min(99, Number(body.quantity) || 1));
+
+  if (!productId) {
+    return NextResponse.json({ error: "Missing product." }, { status: 400 });
+  }
+
+  const product = await getProductById(productId);
+  if (!product) {
+    return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Sign in to use cart." }, { status: 401 });
+  }
+
+  const synced = await ensureStoreProductInDatabase(product);
+  if (!synced) {
+    return NextResponse.json(
+      {
+        error: "catalog_sync",
+        message:
+          "Cart needs your catalog in Supabase. Run supabase/seed_local_store.sql in the SQL editor, or add SUPABASE_SERVICE_ROLE_KEY on Vercel.",
+      },
+      { status: 409 }
+    );
+  }
+
+  const { data: existing } = await supabase
+    .from("cart_items")
+    .select("id, quantity")
+    .eq("user_id", user.id)
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("cart_items")
+      .update({ quantity: existing.quantity + quantity })
+      .eq("id", existing.id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  } else {
+    const { error } = await supabase.from("cart_items").insert({
+      user_id: user.id,
+      product_id: productId,
+      quantity,
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ ok: true });
+}

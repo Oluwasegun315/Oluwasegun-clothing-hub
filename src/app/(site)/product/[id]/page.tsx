@@ -20,10 +20,14 @@ export default async function ProductPage({ params }: Props) {
 
   const related = getRelatedProducts(product, 5);
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase not configured — cart still works as browse-only
+  }
 
   const rating = product.rating ?? 4.8;
   const sizeList =

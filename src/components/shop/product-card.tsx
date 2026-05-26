@@ -9,7 +9,7 @@ import { ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Product } from "@/types/database";
-import { createClient } from "@/lib/supabase/client";
+import { addToCartApi } from "@/lib/cart/add-to-cart";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,43 +37,22 @@ export function ProductCard({ product, index = 0, size = "default" }: ProductCar
     e.stopPropagation();
     setAdding(true);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      const result = await addToCartApi(product.id, 1);
+      if (result.ok) {
+        toast.success("Added to cart", { description: product.name });
+        router.refresh();
+        return;
+      }
+      if (result.needsSignIn) {
         toast.message("Sign in to add to cart", { description: "Create an account or log in." });
         router.push(`/login?next=/product/${product.id}`);
         return;
       }
-
-      const { data: existing } = await supabase
-        .from("cart_items")
-        .select("id, quantity")
-        .eq("user_id", user.id)
-        .eq("product_id", product.id)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + 1 })
-          .eq("id", existing.id);
-      } else {
-        const { error } = await supabase.from("cart_items").insert({
-          user_id: user.id,
-          product_id: product.id,
-          quantity: 1,
-        });
-        if (error?.code === "23503") {
-          toast.message("Run catalog seed in Supabase", {
-            description: "Open supabase/seed_marketplace.sql in the SQL editor once.",
-          });
-          return;
-        }
-        if (error) throw error;
+      if (result.needsCatalog) {
+        toast.message("One-time setup needed", { description: result.message });
+        return;
       }
-      toast.success("Added to cart", { description: product.name });
+      toast.error(result.message);
     } catch {
       toast.error("Could not update cart");
     } finally {

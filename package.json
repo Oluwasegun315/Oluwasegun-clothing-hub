@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "gen:seed": "npx tsx scripts/gen-marketplace-sql.ts",
+    "gen:store-seed": "node scripts/gen-local-store-sql.mjs",
     "sync:assets": "node scripts/sync-store-assets.mjs"
   },
   "dependencies": {

@@ -20,8 +20,17 @@ export function publicAssetUrl(collection: StoreCollection, filename: string) {
   return `/assett/${folder}/${encodeURIComponent(filename)}`;
 }
 
+/** Valid UUID v4 shape — required for Supabase `products.id` and cart FK. */
+const COLLECTION_UUID_SEGMENT: Record<StoreCollection, string> = {
+  men: "4d01",
+  kids: "4d02",
+  streetwear: "4d03",
+};
+
 export function localProductId(collection: StoreCollection, index: number): string {
-  return `33333333-${collection}-${String(index + 1).padStart(4, "0")}`;
+  const segment = COLLECTION_UUID_SEGMENT[collection];
+  const tail = (index + 1).toString(16).padStart(12, "0");
+  return `33333333-${segment}-4000-8000-${tail}`;
 }
 
 const USD_MEN = [45, 58, 32, 78, 42, 65, 88, 55, 48, 72, 38, 52, 95, 120, 62, 85, 68, 75, 59, 44, 49, 56, 41, 36, 28];

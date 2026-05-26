@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { createClient } from "@/lib/supabase/client";
+import { addToCartApi } from "@/lib/cart/add-to-cart";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -26,40 +26,21 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
     }
     setBusy(true);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: existing } = await supabase
-        .from("cart_items")
-        .select("id, quantity")
-        .eq("user_id", user.id)
-        .eq("product_id", productId)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + qty })
-          .eq("id", existing.id);
-      } else {
-        const { error } = await supabase.from("cart_items").insert({
-          user_id: user.id,
-          product_id: productId,
-          quantity: qty,
-        });
-        if (error?.code === "23503") {
-          toast.message("Run catalog seed in Supabase", {
-            description: "Open supabase/seed_marketplace.sql in the SQL editor once so cart can sync.",
-          });
-          return;
-        }
-        if (error) throw error;
+      const result = await addToCartApi(productId, qty);
+      if (result.ok) {
+        toast.success("Added to cart");
+        router.refresh();
+        return;
       }
-      toast.success("Added to cart");
-      router.refresh();
+      if (result.needsSignIn) {
+        router.push(`/login?next=/product/${productId}`);
+        return;
+      }
+      if (result.needsCatalog) {
+        toast.message("One-time setup needed", { description: result.message });
+        return;
+      }
+      toast.error(result.message);
     } catch {
       toast.error("Could not add to cart");
     } finally {

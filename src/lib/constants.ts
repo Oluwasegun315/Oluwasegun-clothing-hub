@@ -28,8 +28,16 @@ export const SHOP_UNIVERSES = [
 
 /** Public site URL for OAuth redirects (must match Supabase redirect allow list). */
 export function getPublicSiteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) {
+    return `https://${vercel.replace(/\/$/, "")}`;
   }
   return "http://localhost:3000";
 }

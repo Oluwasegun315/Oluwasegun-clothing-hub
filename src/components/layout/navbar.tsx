@@ -59,7 +59,12 @@ export function Navbar() {
 
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
+    let supabase: ReturnType<typeof createClient>;
+    try {
+      supabase = createClient();
+    } catch {
+      return;
+    }
     (async () => {
       const {
         data: { user },

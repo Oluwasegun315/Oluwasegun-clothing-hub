@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { startOAuthSignIn } from "@/lib/auth/oauth";
 import { getPublicSiteUrl } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,39 +24,44 @@ function SignupForm() {
   const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/profile")}`;
 
   const onOAuth = async (provider: "google" | "discord") => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo },
-    });
-    if (error) toast.error(error.message);
+    try {
+      const result = await startOAuthSignIn(provider, redirectTo);
+      if (!result.ok) toast.error(result.message);
+    } catch {
+      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: redirectTo,
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (data.session) {
-      toast.success("Account ready — welcome in.");
-      router.push("/profile");
-      router.refresh();
-    } else {
-      toast.message("Check your inbox", {
-        description: "Confirm your email to activate the account (if confirmations are enabled).",
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: redirectTo,
+        },
       });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (data.session) {
+        toast.success("Account ready — welcome in.");
+        router.push("/profile");
+        router.refresh();
+      } else {
+        toast.message("Check your inbox", {
+          description: "Confirm your email to activate the account (if confirmations are enabled).",
+        });
+      }
+    } catch {
+      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    } finally {
+      setLoading(false);
     }
   };
 

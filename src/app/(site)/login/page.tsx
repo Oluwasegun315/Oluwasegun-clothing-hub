@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
+import { startOAuthSignIn } from "@/lib/auth/oauth";
 import { getPublicSiteUrl } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/profile";
+  const oauthError = searchParams.get("error") === "oauth";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,28 +25,39 @@ function LoginForm() {
 
   const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent(next)}`;
 
+  useEffect(() => {
+    if (oauthError) {
+      toast.error("Sign-in was cancelled or failed. Check Supabase redirect URLs match your Vercel site.");
+    }
+  }, [oauthError]);
+
   const onOAuth = async (provider: "google" | "discord") => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo },
-    });
-    if (error) toast.error(error.message);
+    try {
+      const result = await startOAuthSignIn(provider, redirectTo);
+      if (!result.ok) toast.error(result.message);
+    } catch {
+      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Welcome back");
+      router.push(next);
+      router.refresh();
+    } catch {
+      toast.error("Auth is not configured. Check environment variables on Vercel.");
+    } finally {
+      setLoading(false);
     }
-    toast.success("Welcome back");
-    router.push(next);
-    router.refresh();
   };
 
   return (

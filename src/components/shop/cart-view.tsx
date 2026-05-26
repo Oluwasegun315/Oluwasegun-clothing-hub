@@ -42,7 +42,13 @@ export function CartView({ initialLines }: Props) {
     setLines((prev) =>
       prev.map((l) => (l.id === lineId ? { ...l, quantity: safe } : l))
     );
-    const supabase = createClient();
+    let supabase: ReturnType<typeof createClient>;
+    try {
+      supabase = createClient();
+    } catch {
+      toast.error("Cart is unavailable — check site configuration.");
+      return;
+    }
     const { error } = await supabase.from("cart_items").update({ quantity: safe }).eq("id", lineId);
     if (error) {
       toast.error(error.message);
@@ -55,7 +61,13 @@ export function CartView({ initialLines }: Props) {
 
   const removeLine = async (lineId: string) => {
     setLines((prev) => prev.filter((l) => l.id !== lineId));
-    const supabase = createClient();
+    let supabase: ReturnType<typeof createClient>;
+    try {
+      supabase = createClient();
+    } catch {
+      toast.error("Cart is unavailable — check site configuration.");
+      return;
+    }
     const { error } = await supabase.from("cart_items").delete().eq("id", lineId);
     if (error) {
       toast.error(error.message);

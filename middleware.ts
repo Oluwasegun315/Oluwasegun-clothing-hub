@@ -5,8 +5,18 @@ export async function middleware(request: NextRequest) {
   return await updateSession(request);
 }
 
+/**
+ * Only run auth refresh on routes that need Supabase session.
+ * Skipping `/` and static shop pages fixes RSC header text leaking into HTML on Vercel.
+ */
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|assett|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/login",
+    "/signup",
+    "/cart",
+    "/profile",
+    "/auth/:path*",
+    "/product/:path*",
+    "/api/:path*",
   ],
 };

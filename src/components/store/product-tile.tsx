@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import type { Product } from "@/types/database";
 import { addToCartApi } from "@/lib/cart/add-to-cart";
+import { notifyCartUpdated } from "@/lib/cart/use-cart-count";
 import { formatPrice } from "@/lib/format-price";
 import { Button } from "@/components/ui/button";
 
@@ -30,6 +31,7 @@ export function ProductTile({ product }: Props) {
       const result = await addToCartApi(product.id, 1);
       if (result.ok) {
         toast.success("Added to cart");
+        notifyCartUpdated();
         router.refresh();
         return;
       }

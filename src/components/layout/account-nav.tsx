@@ -81,7 +81,6 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
       void syncUser();
-      router.refresh();
     });
 
     return () => {
@@ -91,7 +90,7 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
   }, [router]);
 
   const initials = useMemo(() => {
-    const base = name || email || "OH";
+    const base = (name || email || "OH").trim() || "OH";
     const parts = base.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return base.slice(0, 2).toUpperCase();
@@ -151,7 +150,10 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "hidden rounded-md sm:inline-flex gap-2 pl-1.5 pr-3")}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "hidden gap-2 rounded-md pl-1.5 pr-3 sm:inline-flex"
+          )}
           aria-label="Account menu"
         >
           <Avatar className="size-7 border border-border">
@@ -166,12 +168,18 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
             <p className="text-xs text-muted-foreground">{email}</p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link href="/profile" className="w-full" />} nativeButton={false}>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => {
+              onNavigate?.();
+              router.push("/profile");
+            }}
+          >
             <LayoutDashboard className="size-4" />
             My profile
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={onLogout}>
+          <DropdownMenuItem variant="destructive" className="cursor-pointer" onClick={onLogout}>
             <LogOut className="size-4" />
             Log out
           </DropdownMenuItem>

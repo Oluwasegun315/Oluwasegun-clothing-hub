@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import type { Product } from "@/types/database";
 import { addToCartApi } from "@/lib/cart/add-to-cart";
+import { notifyCartUpdated } from "@/lib/cart/use-cart-count";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export function ProductCard({ product, index = 0, size = "default" }: ProductCar
       const result = await addToCartApi(product.id, 1);
       if (result.ok) {
         toast.success("Added to cart", { description: product.name });
+        notifyCartUpdated();
         router.refresh();
         return;
       }

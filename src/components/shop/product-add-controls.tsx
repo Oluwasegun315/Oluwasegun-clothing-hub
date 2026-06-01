@@ -7,6 +7,7 @@ import { LogIn, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 import { addToCartApi } from "@/lib/cart/add-to-cart";
+import { notifyCartUpdated } from "@/lib/cart/use-cart-count";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -33,6 +34,7 @@ export function ProductAddControls({ productId, isAuthed }: Props) {
       const result = await addToCartApi(productId, qty);
       if (result.ok) {
         toast.success("Added to cart");
+        notifyCartUpdated();
         router.refresh();
         return;
       }

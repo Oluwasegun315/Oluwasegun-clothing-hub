@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import type { CartItemWithProduct } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
+import { notifyCartUpdated } from "@/lib/cart/use-cart-count";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -56,6 +57,7 @@ export function CartView({ initialLines }: Props) {
       return;
     }
     toast.success("Cart updated");
+    notifyCartUpdated();
     refresh();
   };
 
@@ -75,6 +77,7 @@ export function CartView({ initialLines }: Props) {
       return;
     }
     toast.success("Removed from cart");
+    notifyCartUpdated();
     refresh();
   };
 

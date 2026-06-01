@@ -3,9 +3,10 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 
 import { AccountNav } from "@/components/layout/account-nav";
+import { CartNavLink } from "@/components/layout/cart-nav-link";
 import { SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -84,9 +85,7 @@ export function StoreNavbar() {
           </div>
         </form>
 
-        <Link href="/cart" className={cn(buttonVariants({ variant: "ghost", size: "icon" }))} aria-label="Cart">
-          <ShoppingBag className="size-5" />
-        </Link>
+        <CartNavLink />
         <AccountNav />
       </div>
       <Suspense fallback={null}>

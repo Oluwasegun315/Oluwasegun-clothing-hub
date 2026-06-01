@@ -32,6 +32,25 @@ function LoginForm() {
     }
   }, [oauthError]);
 
+  useEffect(() => {
+    if (!hasSupabaseEnv()) return;
+    let cancelled = false;
+    try {
+      const supabase = createClient();
+      void supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!cancelled && user) {
+          router.replace(next);
+          router.refresh();
+        }
+      });
+    } catch {
+      /* env missing */
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [router, next]);
+
   const authNotReady = () => {
     toast.error(
       "Sign-in is not set up on this deployment. In Vercel → Settings → Environment Variables, add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and NEXT_PUBLIC_SITE_URL, then redeploy."

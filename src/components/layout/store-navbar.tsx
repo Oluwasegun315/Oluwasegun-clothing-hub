@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, ShoppingBag, User } from "lucide-react";
+import { Menu, Search, ShoppingBag } from "lucide-react";
 
+import { AccountNav } from "@/components/layout/account-nav";
 import { SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,11 +22,12 @@ const MAIN = [
 
 export function StoreNavbar() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-white shadow-sm">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:h-16 sm:px-6">
-        <Sheet>
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "lg:hidden")}>
             <Menu className="size-5" />
           </SheetTrigger>
@@ -35,16 +37,23 @@ export function StoreNavbar() {
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-2">
               {MAIN.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-orange-50">
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-md px-3 py-2 text-sm font-medium hover:bg-orange-50"
+                >
                   {l.label}
                 </Link>
               ))}
-              <Link href="/cart" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-orange-50">
+              <Link
+                href="/cart"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-medium hover:bg-orange-50"
+              >
                 Cart
               </Link>
-              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-orange-50">
-                Sign in
-              </Link>
+              <AccountNav variant="mobile" onNavigate={() => setMenuOpen(false)} />
             </nav>
           </SheetContent>
         </Sheet>
@@ -78,10 +87,7 @@ export function StoreNavbar() {
         <Link href="/cart" className={cn(buttonVariants({ variant: "ghost", size: "icon" }))} aria-label="Cart">
           <ShoppingBag className="size-5" />
         </Link>
-        <Link href="/login" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "hidden sm:inline-flex rounded-md")}>
-          <User className="mr-1 size-4" />
-          Account
-        </Link>
+        <AccountNav />
       </div>
       <Suspense fallback={null}>
         <CategoryNav />

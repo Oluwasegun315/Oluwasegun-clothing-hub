@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 
 import Link from "next/link";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,17 +13,20 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export default async function ProfilePage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!hasSupabaseEnv()) redirect("/login?next=/profile");
+
+  const user = await getSessionUser();
   if (!user) redirect("/login?next=/profile");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  let profile: { full_name?: string | null; email?: string | null; avatar_url?: string | null } | null =
+    null;
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    profile = data;
+  } catch {
+    // profiles row optional — show auth user metadata
+  }
 
   const displayName =
     profile?.full_name ||
@@ -41,7 +45,7 @@ export default async function ProfilePage() {
       <p className="font-display text-xs tracking-[0.4em] text-primary">PROFILE</p>
       <h1 className="mt-3 font-display text-4xl text-foreground">Your atelier dashboard</h1>
       <p className="mt-3 text-sm text-muted-foreground">
-        Session-backed profile row from Supabase (`profiles`) — extend with orders, wishlists, or loyalty tiers.
+        Your hub account — shop, save your cart, and manage orders from here.
       </p>
 
       <Card className="mt-10 border-border bg-muted">

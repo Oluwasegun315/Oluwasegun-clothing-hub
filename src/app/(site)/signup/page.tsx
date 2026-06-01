@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -23,6 +23,25 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
 
   const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/profile")}`;
+
+  useEffect(() => {
+    if (!hasSupabaseEnv()) return;
+    let cancelled = false;
+    try {
+      const supabase = createClient();
+      void supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!cancelled && user) {
+          router.replace("/profile");
+          router.refresh();
+        }
+      });
+    } catch {
+      /* env missing */
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const authNotReady = () => {
     toast.error(

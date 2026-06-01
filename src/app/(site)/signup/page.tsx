@@ -22,7 +22,7 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/profile")}`;
+  const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/account")}`;
 
   useEffect(() => {
     if (!hasSupabaseEnv()) return;
@@ -31,7 +31,7 @@ function SignupForm() {
       const supabase = createClient();
       void supabase.auth.getUser().then(({ data: { user } }) => {
         if (!cancelled && user) {
-          router.replace("/profile");
+          router.replace("/account");
           router.refresh();
         }
       });
@@ -85,7 +85,7 @@ function SignupForm() {
       }
       if (data.session) {
         toast.success("Account ready — welcome in.");
-        router.push("/profile");
+        router.push("/account");
         router.refresh();
       } else {
         toast.message("Check your inbox", {

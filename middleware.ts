@@ -15,6 +15,7 @@ export const config = {
     "/signup",
     "/cart",
     "/profile",
+    "/account",
     "/auth/:path*",
     "/product/:path*",
     "/api/:path*",

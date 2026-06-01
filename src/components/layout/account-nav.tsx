@@ -11,14 +11,6 @@ import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Props = {
   /** Compact icon-only on desktop header */
@@ -29,6 +21,7 @@ type Props = {
 /** Shows Sign in / Create account when logged out; profile menu when logged in. */
 export function AccountNav({ variant = "header", onNavigate }: Props) {
   const router = useRouter();
+  const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -55,12 +48,14 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
       } = await supabase.auth.getUser();
       if (cancelled) return;
       if (!user) {
+        setSignedIn(false);
         setEmail(null);
         setName(null);
         setAvatar(null);
         setReady(true);
         return;
       }
+      setSignedIn(true);
       setEmail(user.email ?? null);
       setName(
         (user.user_metadata?.full_name as string | undefined) ??
@@ -124,67 +119,44 @@ export function AccountNav({ variant = "header", onNavigate }: Props) {
     );
   }
 
-  if (email) {
+  if (signedIn) {
     if (variant === "mobile") {
       return (
         <div className="flex flex-col gap-2 border-t border-border pt-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your account</p>
           <p className="text-sm font-medium text-foreground">{name || "Member"}</p>
-          <p className="text-xs text-muted-foreground">{email}</p>
+          {email ? <p className="text-xs text-muted-foreground">{email}</p> : null}
           <Link
-            href="/profile"
+            href="/account"
             onClick={onNavigate}
-            className={cn(buttonVariants({ variant: "outline" }), "justify-center rounded-md")}
+            className={cn(buttonVariants(), "justify-center rounded-md glow-button")}
           >
             <LayoutDashboard className="mr-2 size-4" />
-            My profile
+            My account dashboard
           </Link>
-          <Button type="button" variant="destructive" className="rounded-md" onClick={onLogout}>
+          <Button type="button" variant="outline" className="rounded-md" onClick={onLogout}>
             <LogOut className="mr-2 size-4" />
-            Log out
+            Sign out
           </Button>
         </div>
       );
     }
 
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "hidden gap-2 rounded-md pl-1.5 pr-3 sm:inline-flex"
-          )}
-          aria-label="Account menu"
-        >
-          <Avatar className="size-7 border border-border">
-            <AvatarImage src={avatar ?? undefined} alt="" />
-            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-          </Avatar>
-          <span className="max-w-[120px] truncate">Account</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="font-normal">
-            <p className="text-sm font-medium">{name || "Member"}</p>
-            <p className="text-xs text-muted-foreground">{email}</p>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => {
-              onNavigate?.();
-              router.push("/profile");
-            }}
-          >
-            <LayoutDashboard className="size-4" />
-            My profile
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" className="cursor-pointer" onClick={onLogout}>
-            <LogOut className="size-4" />
-            Log out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Link
+        href="/account"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "hidden gap-2 rounded-md pl-1.5 pr-3 sm:inline-flex"
+        )}
+        aria-label="My account dashboard"
+      >
+        <Avatar className="size-7 border border-border">
+          <AvatarImage src={avatar ?? undefined} alt="" />
+          <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+        </Avatar>
+        <span className="max-w-[140px] truncate">My account</span>
+      </Link>
     );
   }
 

@@ -10,8 +10,8 @@ import { getSupabaseAnonKey, getSupabaseUrl, hasSupabaseEnv } from "@/lib/supaba
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  let next = url.searchParams.get("next") ?? "/profile";
-  if (!next.startsWith("/")) next = "/profile";
+  let next = url.searchParams.get("next") ?? "/account";
+  if (!next.startsWith("/")) next = "/account";
 
   if (!code || !hasSupabaseEnv()) {
     return NextResponse.redirect(new URL("/login?error=oauth", url.origin));

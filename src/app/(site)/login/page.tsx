@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/profile";
+  const next = searchParams.get("next") ?? "/account";
   const oauthError = searchParams.get("error") === "oauth";
 
   const [email, setEmail] = useState("");

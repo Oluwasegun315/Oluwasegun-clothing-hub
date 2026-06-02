@@ -1,4 +1,10 @@
 #!/usr/bin/env sh
 # Push to GitHub after every commit so Vercel can deploy the latest site.
 branch="$(git rev-parse --abbrev-ref HEAD)"
-git push origin "$branch"
+if git push origin "$branch" 2>/dev/null; then
+  echo "Pushed to GitHub ($branch)."
+else
+  echo "husky: could not push — run: git push origin $branch"
+  echo "  (Sign in once: GitHub Desktop, or: gh auth login)"
+fi
+exit 0

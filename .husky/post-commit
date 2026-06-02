@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Push to GitHub after every commit so Vercel can deploy the latest site.
+branch="$(git rev-parse --abbrev-ref HEAD)"
+git push origin "$branch"

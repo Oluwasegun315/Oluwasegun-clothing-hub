@@ -11,7 +11,9 @@
     "lint": "next lint",
     "gen:seed": "npx tsx scripts/gen-marketplace-sql.ts",
     "gen:store-seed": "node scripts/gen-local-store-sql.mjs",
-    "sync:assets": "node scripts/sync-store-assets.mjs"
+    "sync:assets": "node scripts/sync-store-assets.mjs",
+    "sync:github": "powershell -ExecutionPolicy Bypass -File scripts/sync-github.ps1",
+    "prepare": "husky"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -37,6 +39,7 @@
     "autoprefixer": "^10.5.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
+    "husky": "^9.1.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",

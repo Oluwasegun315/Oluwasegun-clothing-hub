@@ -28,12 +28,14 @@ export const SHOP_UNIVERSES = [
 
 /** Public site URL for OAuth redirects (must match Supabase redirect allow list). */
 export function getPublicSiteUrl() {
+  // Always use the browser origin when available — avoids broken Google OAuth when
+  // NEXT_PUBLIC_SITE_URL is wrong (e.g. localhost baked into a Vercel deploy).
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin.replace(/\/$/, "");
+  }
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv) {
     return fromEnv.replace(/\/$/, "");
-  }
-  if (typeof window !== "undefined") {
-    return window.location.origin;
   }
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {

@@ -22,7 +22,8 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/account")}`;
+  const oauthRedirect = () =>
+    `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent("/account")}`;
 
   useEffect(() => {
     if (!hasSupabaseEnv()) return;
@@ -55,7 +56,7 @@ function SignupForm() {
       return;
     }
     try {
-      const result = await startOAuthSignIn(provider, redirectTo);
+      const result = await startOAuthSignIn(provider, oauthRedirect());
       if (!result.ok) toast.error(result.message);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not start sign-up.");
@@ -76,7 +77,7 @@ function SignupForm() {
         password,
         options: {
           data: { full_name: fullName },
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: oauthRedirect(),
         },
       });
       if (error) {

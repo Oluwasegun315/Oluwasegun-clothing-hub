@@ -24,8 +24,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent(next)}`;
-
   useEffect(() => {
     if (oauthError) {
       toast.error("Sign-in was cancelled or failed. Check Supabase redirect URLs match your Vercel site.");
@@ -63,6 +61,8 @@ function LoginForm() {
       return;
     }
     try {
+      // Build redirect at click time so it always matches this browser's origin.
+      const redirectTo = `${getPublicSiteUrl()}/auth/callback?next=${encodeURIComponent(next)}`;
       const result = await startOAuthSignIn(provider, redirectTo);
       if (!result.ok) toast.error(result.message);
     } catch (err) {

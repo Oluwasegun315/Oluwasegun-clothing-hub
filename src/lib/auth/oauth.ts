@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/client";
 
-/** Start Google/Discord sign-in — must navigate to the URL Supabase returns. */
+/** Start Google sign-in — must navigate to the URL Supabase returns. */
 export async function startOAuthSignIn(
-  provider: "google" | "discord",
+  provider: "google",
   redirectTo: string
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   try {
@@ -12,13 +12,10 @@ export async function startOAuthSignIn(
       options: {
         redirectTo,
         skipBrowserRedirect: true,
-        queryParams:
-          provider === "google"
-            ? {
-                access_type: "offline",
-                prompt: "select_account",
-              }
-            : undefined,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
       },
     });
 
@@ -30,9 +27,7 @@ export async function startOAuthSignIn(
       return {
         ok: false,
         message:
-          provider === "google"
-            ? "Google sign-in is not enabled in Supabase. Enable Google under Authentication → Providers."
-            : "Discord sign-in is not enabled in Supabase.",
+          "Google sign-in is not enabled in Supabase. Enable Google under Authentication → Providers.",
       };
     }
 

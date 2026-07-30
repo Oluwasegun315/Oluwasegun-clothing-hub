@@ -26,7 +26,7 @@ function resolveSiteOrigin(request: NextRequest) {
 }
 
 /**
- * OAuth (Google / Discord) exchanges `code` for a session and sets auth cookies
+ * OAuth (Google) exchanges `code` for a session and sets auth cookies
  * on the redirect response (required for SSR session to stick).
  */
 export async function GET(request: NextRequest) {

@@ -50,13 +50,13 @@ function SignupForm() {
     );
   };
 
-  const onOAuth = async (provider: "google" | "discord") => {
+  const onGoogle = async () => {
     if (!hasSupabaseEnv()) {
       authNotReady();
       return;
     }
     try {
-      const result = await startOAuthSignIn(provider, oauthRedirect());
+      const result = await startOAuthSignIn("google", oauthRedirect());
       if (!result.ok) toast.error(result.message);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not start sign-up.");
@@ -113,22 +113,14 @@ function SignupForm() {
           </Link>
         </p>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <div className="mt-8">
           <Button
             type="button"
             variant="outline"
-            className="rounded-full border-primary/25 bg-muted"
-            onClick={() => onOAuth("google")}
+            className="w-full rounded-full border-primary/25 bg-muted"
+            onClick={onGoogle}
           >
             Continue with Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full border-primary/25 bg-muted"
-            onClick={() => onOAuth("discord")}
-          >
-            Continue with Discord
           </Button>
         </div>
 
